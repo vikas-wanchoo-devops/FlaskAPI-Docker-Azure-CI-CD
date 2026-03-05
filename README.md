@@ -1,4 +1,3 @@
-cat << 'EOF' > README.md
 # 🚀 Flask API Deployment on Azure Container Apps
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
