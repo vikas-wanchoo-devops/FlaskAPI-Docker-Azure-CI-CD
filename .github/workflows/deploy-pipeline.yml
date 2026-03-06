@@ -1,0 +1,59 @@
+trigger:
+- develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: 'flask-api'
+  acrName: 'vikasacr'
+  resourceGroup: 'WanchooResourceGroup'
+  containerAppName: 'flaskapi-app'
+  envName: 'vikas-env'
+
+steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'vikasacr-connection'   # Service connection to ACR
+    repository: '$(imageName)'
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    buildContext: '.'
+    tags: |
+      $(Build.BuildId)
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Azure subscription 1'   # Service connection to Azure
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Fetch ACR credentials
+      ACR_USERNAME=$(az acr credential show --name $acrName --query "username" -o tsv)
+      ACR_PASSWORD=$(az acr credential show --name $acrName --query "passwords[0].value" -o tsv)
+
+      # Deploy or update Container App
+      if az containerapp show --name $containerAppName --resource-group $resourceGroup &>/dev/null; then
+        echo "Updating existing Container App..."
+        az containerapp update \
+          --name $containerAppName \
+          --resource-group $resourceGroup \
+          --image $acrName.azurecr.io/$imageName:$(Build.BuildId) \
+          --registry-server $acrName.azurecr.io \
+          --registry-username $ACR_USERNAME \
+          --registry-password $ACR_PASSWORD \
+          --query properties.configuration.ingress.fqdn
+      else
+        echo "Creating new Container App..."
+        az containerapp create \
+          --name $containerAppName \
+          --resource-group $resourceGroup \
+          --environment $envName \
+          --image $acrName.azurecr.io/$imageName:$(Build.BuildId) \
+          --target-port 5000 \
+          --ingress external \
+          --registry-server $acrName.azurecr.io \
+          --registry-username $ACR_USERNAME \
+          --registry-password $ACR_PASSWORD \
+          --query properties.configuration.ingress.fqdn
+      fi
