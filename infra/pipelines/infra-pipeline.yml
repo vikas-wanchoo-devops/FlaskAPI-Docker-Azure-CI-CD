@@ -1,0 +1,21 @@
+trigger:
+- none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Azure subscription 1'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az group create --name WanchooResourceGroup --location eastus
+      az acr create --resource-group WanchooResourceGroup --name vikasacr --sku Basic --admin-enabled true
+      az acr login --name vikasacr
+      az provider register --namespace Microsoft.App
+      az containerapp env create \
+        --name vikas-env \
+        --resource-group WanchooResourceGroup \
+        --location eastus
