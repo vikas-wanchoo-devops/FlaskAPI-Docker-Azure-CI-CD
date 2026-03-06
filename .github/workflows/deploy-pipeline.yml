@@ -1,59 +1,52 @@
-trigger:
-- develop
+name: Deploy to Azure Container App
 
-pool:
-  vmImage: 'ubuntu-latest'
+on:
+  push:
+    branches:
+      - develop   # run on pushes to develop
+  workflow_dispatch:   # allow manual trigger from GitHub UI
 
-variables:
-  imageName: 'flask-api'
-  acrName: 'vikasacr'
-  resourceGroup: 'WanchooResourceGroup'
-  containerAppName: 'flaskapi-app'
-  envName: 'vikas-env'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-steps:
-- task: Docker@2
-  inputs:
-    containerRegistry: 'vikasacr-connection'   # Service connection to ACR
-    repository: '$(imageName)'
-    command: 'buildAndPush'
-    Dockerfile: 'Dockerfile'
-    buildContext: '.'
-    tags: |
-      $(Build.BuildId)
+    env:
+      imageName: flask-api
+      acrName: vikasacr
+      resourceGroup: WanchooResourceGroup
+      containerAppName: flaskapi-app
+      envName: vikas-env
 
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: 'Azure subscription 1'   # Service connection to Azure
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      # Fetch ACR credentials
-      ACR_USERNAME=$(az acr credential show --name $acrName --query "username" -o tsv)
-      ACR_PASSWORD=$(az acr credential show --name $acrName --query "passwords[0].value" -o tsv)
+    steps:
+    - uses: actions/checkout@v3
 
-      # Deploy or update Container App
-      if az containerapp show --name $containerAppName --resource-group $resourceGroup &>/dev/null; then
-        echo "Updating existing Container App..."
-        az containerapp update \
-          --name $containerAppName \
-          --resource-group $resourceGroup \
-          --image $acrName.azurecr.io/$imageName:$(Build.BuildId) \
-          --registry-server $acrName.azurecr.io \
-          --registry-username $ACR_USERNAME \
-          --registry-password $ACR_PASSWORD \
-          --query properties.configuration.ingress.fqdn
-      else
-        echo "Creating new Container App..."
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Log in to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.acrName }}.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t ${{ env.acrName }}.azurecr.io/${{ env.imageName }}:${{ github.run_id }} .
+        docker push ${{ env.acrName }}.azurecr.io/${{ env.imageName }}:${{ github.run_id }}
+
+    - name: Deploy Container App
+      run: |
         az containerapp create \
-          --name $containerAppName \
-          --resource-group $resourceGroup \
-          --environment $envName \
-          --image $acrName.azurecr.io/$imageName:$(Build.BuildId) \
+          --name ${{ env.containerAppName }} \
+          --resource-group ${{ env.resourceGroup }} \
+          --environment ${{ env.envName }} \
+          --image ${{ env.acrName }}.azurecr.io/${{ env.imageName }}:${{ github.run_id }} \
           --target-port 5000 \
           --ingress external \
-          --registry-server $acrName.azurecr.io \
-          --registry-username $ACR_USERNAME \
-          --registry-password $ACR_PASSWORD \
+          --registry-server ${{ env.acrName }}.azurecr.io \
+          --registry-username ${{ secrets.ACR_USERNAME }} \
+          --registry-password ${{ secrets.ACR_PASSWORD }} \
           --query properties.configuration.ingress.fqdn
-      fi
