@@ -1,8 +1,10 @@
 # 🚀 Flask API Deployment on Azure Container Apps
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Docker Pulls](https://img.shields.io/docker/pulls/library/flask)]()
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)]()
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vikas-wanchoo-devops/FlaskAPI-Docker-Azure-CI-CD/docker.yml?branch=develop&cacheSeconds=60&timestamp=20260304)
+![Docker Pulls](https://img.shields.io/docker/pulls/vikaswanchoo/flask-api?cacheSeconds=60&timestamp=20260304)
+![GitHub Repo stars](https://img.shields.io/github/stars/vikas-wanchoo-devops/FlaskAPI-Docker-Azure-CI-CD?style=social&cacheSeconds=60&timestamp=20260304)
+![GitHub License](https://img.shields.io/github/license/vikas-wanchoo-devops/FlaskAPI-Docker-Azure-CI-CD?cacheSeconds=60&timestamp=20260304)
 
 ## 📘 What this repo does
 - 🔁 Simple Flask API application
