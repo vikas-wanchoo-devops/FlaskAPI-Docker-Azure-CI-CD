@@ -3,39 +3,15 @@ from flasgger import Swagger
 
 app = Flask(__name__)
 
-# Swagger Configuration
-swagger_config = {
-    "headers": [],
-    "specs": [
-        {
-            "endpoint": "swagger",
-            "route": "/swagger.json",
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
-        }
-    ],
-    "swagger_ui": True,
-    "specs_route": "/docs/",
-    "swagger_ui_config": {
-        "url": "/swagger.json"
-    }
+# Swagger configuration (default stable config)
+app.config["SWAGGER"] = {
+    "title": "Flask DevOps Demo API",
+    "description": "Sample Flask API deployed using Docker and Azure Container Apps with CI/CD.",
+    "version": "1.0.0",
+    "uiversion": 3
 }
 
-# Swagger Template
-swagger_template = {
-    "swagger": "2.0",
-    "info": {
-        "title": "Flask DevOps Demo API",
-        "description": "A sample Flask API with Swagger documentation for CI/CD, Docker, and Azure Container Apps deployment.",
-        "version": "1.0.0",
-        "contact": {
-            "name": "API Support"
-        }
-    }
-}
-
-# Initialize Swagger
-swagger = Swagger(app, config=swagger_config, template=swagger_template)
+swagger = Swagger(app)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -47,8 +23,9 @@ def home():
       - Home
     description: Returns greeting message or echoes POST data.
     parameters:
-      - name: body
-        in: body
+      - in: body
+        name: body
+        required: false
         schema:
           type: object
           properties:
@@ -58,6 +35,12 @@ def home():
     responses:
       200:
         description: Successful response
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Hello from Flask API with CI/CD!
     """
 
     if request.method == "GET":
