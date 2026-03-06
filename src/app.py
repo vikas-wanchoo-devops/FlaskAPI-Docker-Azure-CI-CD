@@ -4,7 +4,34 @@ from flasgger import Swagger
 app = Flask(__name__)
 
 # Swagger Configuration
-swagger = Swagger(app)
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/swagger.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "swagger_ui": True,
+    "specs_route": "/docs/"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Flask DevOps Demo API",
+        "description": "A sample Flask API with Swagger documentation for CI/CD and container deployment.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "API Support"
+        }
+    }
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -13,6 +40,7 @@ def home():
     ---
     tags:
       - Home
+    description: Returns greeting message or echoes POST data.
     parameters:
       - name: body
         in: body
@@ -45,21 +73,10 @@ def health():
     ---
     tags:
       - Health
+    description: Check API health status
     responses:
       200:
         description: API Health Status
-        schema:
-          type: object
-          properties:
-            status:
-              type: string
-              example: healthy
-            service:
-              type: string
-              example: flask-api
-            message:
-              type: string
-              example: API is running
     """
 
     return jsonify({
