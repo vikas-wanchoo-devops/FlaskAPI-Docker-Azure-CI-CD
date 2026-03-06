@@ -15,5 +15,16 @@ def home():
             "your_data": data
         })
 
+
+# Health Check Endpoint
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({
+        "status": "healthy",
+        "service": "flask-api",
+        "message": "API is running"
+    }), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
