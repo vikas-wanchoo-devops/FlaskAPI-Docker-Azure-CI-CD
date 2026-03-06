@@ -3,15 +3,36 @@ from flasgger import Swagger
 
 app = Flask(__name__)
 
-# Swagger configuration (default stable config)
-app.config["SWAGGER"] = {
-    "title": "Flask DevOps Demo API",
-    "description": "Sample Flask API deployed using Docker and Azure Container Apps with CI/CD.",
-    "version": "1.0.0",
-    "uiversion": 3
+# Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "swagger",
+            "route": "/swagger.json",   # clean spec URL
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs/"
 }
 
-swagger = Swagger(app)
+# Swagger template
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Flask DevOps Demo API",
+        "description": "Sample Flask API deployed using Docker and Azure Container Apps with CI/CD.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "API Support"
+        }
+    }
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -35,12 +56,6 @@ def home():
     responses:
       200:
         description: Successful response
-        schema:
-          type: object
-          properties:
-            message:
-              type: string
-              example: Hello from Flask API with CI/CD!
     """
 
     if request.method == "GET":
@@ -65,18 +80,6 @@ def health():
     responses:
       200:
         description: API Health Status
-        schema:
-          type: object
-          properties:
-            status:
-              type: string
-              example: healthy
-            service:
-              type: string
-              example: flask-api
-            message:
-              type: string
-              example: API is running
     """
 
     return jsonify({
