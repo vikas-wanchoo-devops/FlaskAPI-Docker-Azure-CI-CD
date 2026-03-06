@@ -6,6 +6,8 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/vikas-wanchoo-devops/FlaskAPI-Docker-Azure-CI-CD?style=social&cacheSeconds=60&timestamp=20260304)
 ![GitHub License](https://img.shields.io/github/license/vikas-wanchoo-devops/FlaskAPI-Docker-Azure-CI-CD?cacheSeconds=60&timestamp=20260304)
 
+API URL: https://flaskapi-app.nicebush-75567a54.eastus.azurecontainerapps.io/apidocs/
+
 ## 📘 What this repo does
 - 🔁 Simple Flask API application
 - 📦 Builds and pushes Docker image to **Azure Container Registry (ACR)**
