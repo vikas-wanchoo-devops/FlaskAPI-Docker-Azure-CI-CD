@@ -8,21 +8,25 @@ swagger_config = {
     "headers": [],
     "specs": [
         {
-            "endpoint": "apispec",
+            "endpoint": "swagger",
             "route": "/swagger.json",
             "rule_filter": lambda rule: True,
             "model_filter": lambda tag: True,
         }
     ],
     "swagger_ui": True,
-    "specs_route": "/docs/"
+    "specs_route": "/docs/",
+    "swagger_ui_config": {
+        "url": "/swagger.json"
+    }
 }
 
+# Swagger Template
 swagger_template = {
     "swagger": "2.0",
     "info": {
         "title": "Flask DevOps Demo API",
-        "description": "A sample Flask API with Swagger documentation for CI/CD and container deployment.",
+        "description": "A sample Flask API with Swagger documentation for CI/CD, Docker, and Azure Container Apps deployment.",
         "version": "1.0.0",
         "contact": {
             "name": "API Support"
@@ -30,6 +34,7 @@ swagger_template = {
     }
 }
 
+# Initialize Swagger
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 
@@ -77,6 +82,18 @@ def health():
     responses:
       200:
         description: API Health Status
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: healthy
+            service:
+              type: string
+              example: flask-api
+            message:
+              type: string
+              example: API is running
     """
 
     return jsonify({
