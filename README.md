@@ -32,7 +32,6 @@ flask-api-deployment/
 │   └── deploy.yml        # Build & deploy (auto run on push)
 └── README.md             # Documentation
 
-
 ## 🛠️ Manual Commands
 
 ### 🏗️ Provision Infrastructure
