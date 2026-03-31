@@ -1,0 +1,64 @@
+name: Code Freeze Check
+
+on:
+  repository_dispatch:
+    types: [freeze-updated]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  check-freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control repo main
+        uses: actions/checkout@v4
+        with:
+          repository: vikas-wanchoo-devops/release-freeze-control
+          ref: main
+          path: control-repo
+
+      - name: Read freeze.json
+        run: |
+          cp control-repo/code-freeze-config/freeze.json freeze.json
+          echo "Contents of freeze.json:"
+          cat freeze.json
+
+      - name: Parse freeze flag
+        id: freeze
+        run: |
+          FREEZE=$(jq -r '.freeze_active' freeze.json | tr '[:upper:]' '[:lower:]')
+          echo "Parsed freeze flag: $FREEZE"
+          echo "freeze=$FREEZE" >> "$GITHUB_OUTPUT"
+
+      - name: Block merge if freeze active
+        if: ${{ steps.freeze.outputs.freeze == 'true' }}
+        run: |
+          REASON=$(jq -r '.reason' freeze.json)
+          echo "❌ Code freeze is active. Merging is blocked. Reason: $REASON"
+          exit 1
+
+      - name: Allow merge if freeze inactive
+        if: ${{ steps.freeze.outputs.freeze == 'false' }}
+        run: |
+          echo "✅ Code freeze has ended. Merges are now permitted."
+
+      - name: Update PR check run status
+        if: always()
+        run: |
+          sha="${{ github.event.pull_request.head.sha }}"
+          status="completed"
+          conclusion="success"
+          if [ "${{ steps.freeze.outputs.freeze }}" = "true" ]; then
+            conclusion="failure"
+          fi
+
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/check-runs \
+            -d "{
+              \"name\": \"Code Freeze Check\",
+              \"head_sha\": \"$sha\",
+              \"status\": \"$status\",
+              \"conclusion\": \"$conclusion\"
+            }"
